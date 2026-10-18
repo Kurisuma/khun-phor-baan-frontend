@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#fc307b" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+  <!-- Obsidian Arrow Body -->
+  <path d="M4 3L13 25L17 17L25 13L4 3Z" fill="#140f19" stroke="#ff6ea6" stroke-width="1.5" stroke-linejoin="round" filter="url(#glow)"/>
+  <!-- Arcane Core Inset -->
+  <path d="M7 6L13.5 20L15.5 15.5L20 13.5L7 6Z" fill="#fc307b" fill-opacity="0.85"/>
+  <!-- Astral Tip Pip -->
+  <circle cx="5" cy="4" r="1.5" fill="#ffffff"/>
+</svg>

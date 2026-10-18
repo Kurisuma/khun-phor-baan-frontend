@@ -1,0 +1,98 @@
+<div class="app-shell">
+  <div class="meteor-field" aria-hidden="true">
+    <span *ngFor="let meteor of meteors" [style.--i]="meteor"></span>
+  </div>
+
+  <header class="site-header">
+    <div class="utility-bar">
+      <span>{{ i18n.t('shell.announcement') }}</span>
+      <div class="utility-actions">
+        <button class="theme-toggle" type="button" (click)="toggleTheme()" [attr.aria-label]="i18n.t('shell.themeLabel', { theme: themeLabel() })">
+          {{ themeLabel() }}
+        </button>
+        <div class="currency-switcher" title="Select Display Currency">
+          <select [value]="activeDisplayCurrency()" (change)="onCurrencyChange($event)" class="currency-select" aria-label="Display Currency">
+            <option *ngFor="let c of supportedCurrencies" [value]="c.code">
+              {{ c.flag }} {{ c.code }} ({{ c.symbol }})
+            </option>
+          </select>
+        </div>
+        <div class="locale-switcher" [attr.aria-label]="i18n.t('shell.locale')">
+          <a [routerLink]="i18n.withLocale('th')">TH</a>
+          <a [routerLink]="i18n.withLocale('en')">EN</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar" [class.nav-open]="mobileNavOpen()">
+      <a class="brand" [routerLink]="i18n.localePath('')" [attr.aria-label]="i18n.t('nav.home')">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="/icons/kpb-brand-seal.webp" alt="KPB" width="44" height="44" loading="eager" />
+        </span>
+        <span>
+          <strong>KhunPhorBaan</strong>
+          <small>{{ i18n.t('shell.subtitle') }}</small>
+        </span>
+      </a>
+
+      <button
+        class="mobile-menu-toggle"
+        type="button"
+        [attr.aria-label]="mobileNavOpen() ? i18n.t('shell.closeNavigation') : i18n.t('shell.openNavigation')"
+        [attr.aria-expanded]="mobileNavOpen()"
+        aria-controls="site-mobile-nav"
+        (click)="toggleMobileNav()"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div class="nav-drawer" id="site-mobile-nav">
+        <nav class="nav-links primary-nav" [attr.aria-label]="i18n.t('shell.mainNav')">
+          <a [routerLink]="i18n.localePath('')" (click)="closeMobileNav()">{{ i18n.t('nav.home') }}</a>
+          <a [routerLink]="i18n.localePath('catalog')" (click)="closeMobileNav()">{{ i18n.t('nav.catalog') }}</a>
+          <a [routerLink]="i18n.localePath('catalog')" [queryParams]="{ kind: 'PRIVATE' }" (click)="closeMobileNav()">{{ i18n.t('nav.private') }}</a>
+          <a [routerLink]="i18n.localePath('catalog')" [queryParams]="{ kind: 'SHARED' }" (click)="closeMobileNav()">{{ i18n.t('nav.shared') }}</a>
+        </nav>
+
+        <div class="nav-actions" *ngIf="auth.initialized()">
+          <a class="search-link" [routerLink]="i18n.localePath('catalog')" [queryParams]="{ q: '' }" (click)="closeMobileNav()">
+            <span>{{ i18n.t('nav.search') }}</span>
+          </a>
+
+          <ng-container *ngIf="auth.authenticated(); else guestActions">
+            <details class="account-menu">
+              <summary>
+                <span class="account-avatar" aria-hidden="true">{{ (auth.user()?.email || 'A').slice(0, 1).toUpperCase() }}</span>
+                <span class="account-label">{{ auth.user()?.email || i18n.t('nav.account') }}</span>
+              </summary>
+              <div class="account-popover">
+                <a [routerLink]="i18n.localePath('account')" (click)="closeMobileNav()">{{ i18n.t('nav.account') }}</a>
+                <a [routerLink]="i18n.localePath('orders')" (click)="closeMobileNav()">{{ i18n.t('nav.orders') }}</a>
+                <a [routerLink]="i18n.localePath('bills')" (click)="closeMobileNav()">{{ i18n.t('nav.bills') }}</a>
+                <a [routerLink]="i18n.localePath('subscriptions')" (click)="closeMobileNav()">{{ i18n.t('nav.subscriptions') }}</a>
+                <a *ngIf="auth.isAdmin()" [routerLink]="i18n.localePath('privilege')" (click)="closeMobileNav()">{{ i18n.t('nav.privilege') }}</a>
+                <button type="button" (click)="logout()">{{ i18n.t('auth.logout') }}</button>
+              </div>
+            </details>
+          </ng-container>
+
+          <ng-template #guestActions>
+            <a class="nav-login" [routerLink]="i18n.localePath('login')" (click)="closeMobileNav()">{{ i18n.t('nav.login') }}</a>
+            <a class="nav-register" [routerLink]="i18n.localePath('register')" (click)="closeMobileNav()">{{ i18n.t('nav.register') }}</a>
+          </ng-template>
+
+          <a class="cart-link" [routerLink]="i18n.localePath('cart')" [attr.aria-label]="i18n.t('nav.cart')" (click)="closeMobileNav()">
+            <span>{{ i18n.t('nav.cart') }}</span>
+            <strong *ngIf="cartCount() > 0">{{ cartCount() }}</strong>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content" id="main-content">
+    <router-outlet />
+  </main>
+</div>

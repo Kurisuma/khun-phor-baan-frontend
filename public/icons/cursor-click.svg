@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <filter id="burst-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#fc307b" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+  <!-- Concentrated Burst Spark -->
+  <circle cx="16" cy="16" r="7" fill="#ff6ea6" fill-opacity="0.35"/>
+  <circle cx="16" cy="16" r="3.5" fill="#fc307b" filter="url(#burst-glow)"/>
+  <circle cx="16" cy="16" r="1.5" fill="#ffffff"/>
+  <!-- Radiating Spikes -->
+  <path d="M16 5V9M16 23V27M5 16H9M23 16H27M8 8L11 11M21 21L24 24M24 8L21 11M11 21L8 24" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round"/>
+</svg>

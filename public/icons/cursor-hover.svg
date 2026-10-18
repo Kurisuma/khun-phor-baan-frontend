@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <filter id="star-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#fc307b" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+  <!-- Orbiting Rune Ring -->
+  <circle cx="16" cy="16" r="11" stroke="#ff6ea6" stroke-width="1.2" stroke-dasharray="2 3" opacity="0.75"/>
+  <!-- Celestial 4-point crosshair -->
+  <path d="M16 2V30M2 16H30" stroke="#ff6ea6" stroke-width="1.5" stroke-linecap="round" filter="url(#star-glow)"/>
+  <!-- Arcane Center Core -->
+  <circle cx="16" cy="16" r="4.5" fill="#fc307b"/>
+  <circle cx="16" cy="16" r="1.8" fill="#ffffff"/>
+</svg>
