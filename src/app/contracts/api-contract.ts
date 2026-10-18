@@ -31,6 +31,98 @@ export interface PaymentMethodOption {
   supported_currencies: string[];
 }
 
+export interface SystemBootInfo {
+  boot_time: string;
+  boot_timestamp_unix_ms: number;
+  uptime_seconds: number;
+  uptime_formatted: string;
+  environment: string;
+  kernel: string;
+  os: string;
+  arch: string;
+  engine: string;
+  engine_version: string;
+  runtime: string;
+  orm_storage_engine: string;
+  mac_sealing: string;
+  security_pipeline: string;
+  singleton_id: string;
+  total_modules: number;
+  healthy_modules: number;
+  degraded_modules: number;
+  circuit_open_modules: number;
+  status: 'OPERATIONAL' | 'DEGRADED';
+}
+
+export interface PaymentModuleHealthSnapshot {
+  is_healthy: boolean;
+  latency_rtt_ms: number;
+  circuit_state: string;
+  message: string;
+}
+
+export interface ModuleCapabilities {
+  supports_dynamic_qr?: boolean;
+  supports_webhook_reconciliation?: boolean;
+  supports_refunds?: boolean;
+  requires_unique_decimal_shift?: boolean;
+  requires_hardware_enclave?: boolean;
+  supports_polling?: boolean;
+}
+
+export interface PaymentModuleDbConfig {
+  id: number;
+  provider_code: string;
+  country_code: string;
+  currency_code: string;
+  min_amount_microcredits: number;
+  max_amount_microcredits: number;
+  fee_basis_points: number;
+  fee_bps?: number;
+  fixed_fee_microcredits?: number;
+  is_enabled: boolean;
+  config_json?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PaymentModuleRegisterInfo {
+  module_id: string;
+  provider_code: string;
+  module_name: string;
+  module_version: string;
+  vendor_name: string;
+  description_en: string;
+  description_th: string;
+  method_type: string;
+  group_name_en: string;
+  group_name_th: string;
+  jurisdiction_rule: string;
+  supported_countries: string[];
+  supported_currencies: string[];
+  capabilities: ModuleCapabilities;
+  priority: number;
+  health: PaymentModuleHealthSnapshot;
+  active_configs: PaymentModuleDbConfig[];
+}
+
+export interface PaymentModulesApiResponse {
+  boot_info: SystemBootInfo;
+  modules: PaymentModuleRegisterInfo[];
+  total_modules?: number;
+}
+
+export interface AssignPaymentModuleCountryRequest {
+  provider_code: string;
+  country_code: string;
+  currency_code: string;
+  min_amount_microcredits?: number;
+  max_amount_microcredits?: number;
+  fee_bps?: number;
+  fixed_fee_microcredits?: number;
+  is_enabled?: boolean;
+}
+
 export interface ApiProblem {
   type: string;
   title: string;

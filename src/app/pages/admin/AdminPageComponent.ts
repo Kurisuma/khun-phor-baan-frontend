@@ -1,4 +1,4 @@
-import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, SlicePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminUiService } from '../../services/admin-ui/AdminUiService';
@@ -11,6 +11,7 @@ import { SeoService } from '../../services/seo/SeoService';
 import { TrueMoneyAdminUiService } from '../../services/truemoney-admin-ui/TrueMoneyAdminUiService';
 import { I18nLoader } from '../../modules/i18n-loader/I18nLoader';
 import { apiErrorMessage, formatMoney, parseJsonObject, setGlobalBaseCurrency, getGlobalBaseCurrency, cacheFxRates, setGlobalMinFeeMicrocredits } from '../presentation';
+import type { PaymentModuleRegisterInfo, SystemBootInfo, PaymentModuleDbConfig } from '../../contracts/api-contract';
 
 type AdminRow = Record<string, unknown>;
 type UploadedProductMedia = { media_id: string; url: string };
@@ -59,7 +60,7 @@ function loadingToTabId(value: string): AdminTabId | null {
 @Component({
   standalone: true,
   selector: 'kpb-admin-page',
-  imports: [NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, ReactiveFormsModule],
+  imports: [NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, ReactiveFormsModule, SlicePipe],
   template: `
     <section class="page-heading">
       <p class="eyebrow">{{ i18n.t('admin.eyebrow') }}</p>
@@ -102,6 +103,11 @@ function loadingToTabId(value: string): AdminTabId | null {
             <span>{{ adminText(metric.labelKey) }}</span>
             <strong>{{ dashboardMetricValue(metric) }}</strong>
             <small>{{ adminText(metric.detailKey) }}</small>
+          </article>
+          <article class="executive-card tone-good" *ngIf="paymentBootInfo() as boot" (click)="openTab('payments')" style="cursor: pointer;">
+            <span>{{ i18n.currentLocale() === 'th' ? 'ระบบการชำระเงิน (SPI Engine)' : 'Payment SPI Engine' }}</span>
+            <strong>{{ boot.status }} · {{ boot.total_modules }} Drivers</strong>
+            <small>{{ boot.uptime_formatted }} ({{ boot.kernel }})</small>
           </article>
         </div>
 
@@ -797,6 +803,217 @@ function loadingToTabId(value: string): AdminTabId | null {
       </div>
 
       <div *ngSwitchCase="'payments'" class="content-grid">
+        <!-- System Boot & Payment SPI Module Registry Panel -->
+        <article class="panel payment-spi-system-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">{{ i18n.currentLocale() === 'th' ? 'สถาปัตยกรรมระบบการชำระเงิน' : 'Payment Engine Architecture' }}</p>
+              <h2>{{ i18n.currentLocale() === 'th' ? 'ข้อมูลการบูตระบบและทะเบียนโมดูลการชำระเงิน (SPI Registry)' : 'System Boot Diagnostics & Payment SPI Registry' }}</h2>
+              <p class="muted">
+                {{ i18n.currentLocale() === 'th'
+                  ? 'ตรวจสอบสถานะการทำงาน Singleton Registry, ข้อมูล System Kernel, โมดูลชำระเงินที่ลงทะเบียน และสิทธิ์การเข้าถึงระดับประเทศ'
+                  : 'Real-time inspection of process-wide Singleton Registry, system boot kernel, registered payment SPI drivers, and jurisdiction matrices.' }}
+              </p>
+            </div>
+            <div class="inline-actions">
+              <button class="btn btn-secondary" type="button" (click)="loadPaymentModules(true)">{{ i18n.t('common.refresh') }}</button>
+              <button class="btn btn-primary" type="button" (click)="openAssignCountryModal()">
+                + {{ i18n.currentLocale() === 'th' ? 'กำหนดสิทธิ์ประเทศใหม่' : 'Assign Country Route' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- System Boot Info Diagnostics Banner -->
+          <div class="system-boot-banner" *ngIf="paymentBootInfo() as boot">
+            <div class="boot-header-status">
+              <div class="boot-status-pill" [ngClass]="boot.status === 'OPERATIONAL' ? 'status-pill-ok' : 'status-pill-warn'">
+                <span class="status-pulse-dot"></span>
+                <strong>{{ boot.status }}</strong>
+              </div>
+              <span class="boot-engine-title">
+                <strong>{{ boot.engine }}</strong> (v{{ boot.engine_version }})
+              </span>
+              <span class="boot-kernel-badge">{{ boot.kernel }} · {{ boot.os }}/{{ boot.arch }}</span>
+            </div>
+
+            <div class="boot-metrics-grid">
+              <div class="boot-metric-card">
+                <span class="boot-label">{{ i18n.currentLocale() === 'th' ? 'เวลาบูตระบบ' : 'Boot Timestamp' }}</span>
+                <strong>{{ boot.boot_time | slice:0:19 }}Z</strong>
+                <small class="muted">{{ boot.uptime_formatted }} ({{ boot.uptime_seconds }}s)</small>
+              </div>
+
+              <div class="boot-metric-card">
+                <span class="boot-label">{{ i18n.currentLocale() === 'th' ? 'ฐานข้อมูลและ ORM' : 'Storage Engine' }}</span>
+                <strong>{{ boot.orm_storage_engine }}</strong>
+                <small class="text-accent">{{ boot.mac_sealing }}</small>
+              </div>
+
+              <div class="boot-metric-card">
+                <span class="boot-label">{{ i18n.currentLocale() === 'th' ? 'Singleton Registry' : 'Singleton ID' }}</span>
+                <code>{{ boot.singleton_id }}</code>
+                <small class="muted">{{ boot.runtime }}</small>
+              </div>
+
+              <div class="boot-metric-card">
+                <span class="boot-label">{{ i18n.currentLocale() === 'th' ? 'โมดูลชำระเงิน' : 'Registered Drivers' }}</span>
+                <strong class="highlight-number">{{ boot.total_modules }} {{ i18n.currentLocale() === 'th' ? 'โมดูล' : 'Modules' }}</strong>
+                <small class="text-success">{{ boot.healthy_modules }} Healthy · {{ boot.degraded_modules }} Degraded</small>
+              </div>
+            </div>
+
+            <div class="boot-security-pipeline">
+              <span class="security-pipeline-label">🛡️ {{ i18n.currentLocale() === 'th' ? 'ไปป์ไลน์ความปลอดภัย 6 ชั้น' : '6-Stage Security Pipeline' }}:</span>
+              <code>{{ boot.security_pipeline }}</code>
+            </div>
+          </div>
+
+          <!-- Registered Payment Modules Cards Grid -->
+          <div class="payment-modules-list-container">
+            <h3 class="modules-section-title">
+              {{ i18n.currentLocale() === 'th' ? 'โมดูลการชำระเงินที่ลงทะเบียนในระบบ (Booted Drivers)' : 'Registered Payment SPI Drivers (Booted)' }}
+              <span class="modules-counter-pill">{{ paymentModules().length }}</span>
+            </h3>
+
+            <div class="payment-modules-grid" *ngIf="paymentModules().length; else noPaymentModules">
+              <article class="payment-module-card" *ngFor="let mod of paymentModules()">
+                <div class="module-card-header">
+                  <div class="module-title-group">
+                    <span class="module-provider-badge">{{ mod.provider_code }}</span>
+                    <h4>{{ mod.module_name }}</h4>
+                    <span class="module-version-badge">v{{ mod.module_version }}</span>
+                  </div>
+                  <div class="module-health-badge" [ngClass]="mod.health.is_healthy ? 'health-ok' : 'health-warn'">
+                    <span class="health-dot"></span>
+                    <span>{{ mod.health.circuit_state || 'CLOSED' }} ({{ mod.health.latency_rtt_ms }}ms)</span>
+                  </div>
+                </div>
+
+                <div class="module-meta-row">
+                  <span class="module-vendor">🏢 {{ mod.vendor_name }}</span>
+                  <span class="module-group">🏷️ {{ i18n.currentLocale() === 'th' ? mod.group_name_th : mod.group_name_en }}</span>
+                  <span class="module-method-type">⚙️ {{ mod.method_type }}</span>
+                </div>
+
+                <p class="module-desc">
+                  {{ i18n.currentLocale() === 'th' ? mod.description_th : mod.description_en }}
+                </p>
+
+                <!-- Jurisdiction & Currencies -->
+                <div class="module-jurisdiction-box">
+                  <div class="jurisdiction-item">
+                    <span class="sub-label">{{ i18n.currentLocale() === 'th' ? 'กฎเกณฑ์ขอบเขต' : 'Jurisdiction' }}:</span>
+                    <code>{{ mod.jurisdiction_rule }}</code>
+                  </div>
+                  <div class="jurisdiction-tags">
+                    <div class="tag-group">
+                      <span class="sub-label">{{ i18n.currentLocale() === 'th' ? 'ประเทศที่รองรับ' : 'Countries' }}:</span>
+                      <span class="country-pill" *ngFor="let c of mod.supported_countries">{{ c }}</span>
+                    </div>
+                    <div class="tag-group">
+                      <span class="sub-label">{{ i18n.currentLocale() === 'th' ? 'สกุลเงิน' : 'Currencies' }}:</span>
+                      <span class="currency-pill" *ngFor="let cur of mod.supported_currencies">{{ cur }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Capabilities Matrix -->
+                <div class="module-capabilities-bar">
+                  <span class="sub-label">{{ i18n.currentLocale() === 'th' ? 'ความสามารถ' : 'Capabilities' }}:</span>
+                  <span class="capability-tag" *ngIf="mod.capabilities.supports_dynamic_qr">Dynamic QR</span>
+                  <span class="capability-tag" *ngIf="mod.capabilities.supports_webhook_reconciliation">Webhook Reconciliation</span>
+                  <span class="capability-tag" *ngIf="mod.capabilities.supports_refunds">Refunds</span>
+                  <span class="capability-tag" *ngIf="mod.capabilities.requires_unique_decimal_shift">Deterministic Satangs</span>
+                  <span class="capability-tag zero-satang" *ngIf="!mod.capabilities.requires_unique_decimal_shift">Zero-Satang Crypto</span>
+                </div>
+
+                <!-- Database Assigned Country Routing -->
+                <div class="module-db-configs">
+                  <div class="db-configs-header">
+                    <strong>{{ i18n.currentLocale() === 'th' ? 'การตั้งค่าเส้นทางในฐานข้อมูล (Active Country Mappings)' : 'Database Country Mappings' }}</strong>
+                    <span class="config-count">({{ mod.active_configs.length }})</span>
+                  </div>
+
+                  <div class="db-configs-list" *ngIf="mod.active_configs.length; else noActiveConfigs">
+                    <div class="db-config-row" *ngFor="let cfg of mod.active_configs">
+                      <div class="config-country-info">
+                        <strong class="config-country-code">{{ cfg.country_code }}</strong>
+                        <span class="config-currency">{{ cfg.currency_code }}</span>
+                        <span class="config-fee">Fee: {{ cfg.fee_basis_points / 100 }}%</span>
+                      </div>
+                      <div class="config-actions">
+                        <span class="config-status-badge" [ngClass]="cfg.is_enabled ? 'enabled' : 'disabled'">
+                          {{ cfg.is_enabled ? (i18n.currentLocale() === 'th' ? 'เปิดใช้งาน' : 'ENABLED') : (i18n.currentLocale() === 'th' ? 'ปิดใช้งาน' : 'DISABLED') }}
+                        </span>
+                        <button
+                          class="btn btn-sm"
+                          [ngClass]="cfg.is_enabled ? 'btn-secondary' : 'btn-primary'"
+                          type="button"
+                          (click)="togglePaymentModule(mod, cfg)"
+                        >
+                          {{ cfg.is_enabled ? (i18n.currentLocale() === 'th' ? 'ปิด' : 'Disable') : (i18n.currentLocale() === 'th' ? 'เปิด' : 'Enable') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <ng-template #noActiveConfigs>
+                    <p class="muted small-text">{{ i18n.currentLocale() === 'th' ? 'ยังไม่ได้กำหนดประเทศในฐานข้อมูล (ใช้ค่าดีฟอลต์ของโมดูล)' : 'No specific country mappings seeded in DB.' }}</p>
+                  </ng-template>
+                </div>
+              </article>
+            </div>
+            <ng-template #noPaymentModules>
+              <div class="empty-state-card">
+                <p class="muted">{{ i18n.currentLocale() === 'th' ? 'กำลังโหลดข้อมูลโมดูลการชำระเงิน...' : 'Loading registered payment modules...' }}</p>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Assign Country Modal / Subform -->
+          <div class="admin-modal-backdrop" *ngIf="showAssignCountryModal()">
+            <div class="admin-modal-card">
+              <div class="panel-heading">
+                <h3>{{ i18n.currentLocale() === 'th' ? 'กำหนดสิทธิ์โมดูลชำระเงินระดับประเทศ' : 'Assign Payment Module to Country' }}</h3>
+                <button class="btn btn-secondary" type="button" (click)="closeAssignCountryModal()">✕</button>
+              </div>
+              <p class="muted">
+                {{ i18n.currentLocale() === 'th'
+                  ? 'กำหนดโมดูล SPI ให้กับประเทศ สกุลเงิน และอัตราค่าธรรมเนียม พร้อมลงลายมือชื่อ BLAKE3 Row-MAC อัตโนมัติ'
+                  : 'Map an SPI driver to a specific jurisdiction and currency with cryptographic BLAKE3 Row-MAC sealing.' }}
+              </p>
+              <form class="stack" [formGroup]="assignCountryForm" (ngSubmit)="submitAssignCountry()">
+                <div class="form-grid">
+                  <label>
+                    <span>{{ i18n.currentLocale() === 'th' ? 'เลือกโมดูลชำระเงิน' : 'Payment Module' }}</span>
+                    <select formControlName="provider_code" required>
+                      <option value="">-- {{ i18n.currentLocale() === 'th' ? 'เลือกโมดูล' : 'Select Module' }} --</option>
+                      <option *ngFor="let m of paymentModules()" [value]="m.provider_code">
+                        {{ m.provider_code }} ({{ m.module_name }})
+                      </option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>{{ i18n.currentLocale() === 'th' ? 'รหัสประเทศ (ISO 2 หลัก เช่น TH, MY, IN, US หรือ * ทั่วโลก)' : 'Country Code (e.g. TH, MY, IN, US, *)' }}</span>
+                    <input formControlName="country_code" placeholder="TH" required maxlength="10">
+                  </label>
+                  <label>
+                    <span>{{ i18n.currentLocale() === 'th' ? 'รหัสสกุลเงิน (เช่น THB, MYR, INR, USDT, USD)' : 'Currency Code (e.g. THB, MYR, INR, USDT)' }}</span>
+                    <input formControlName="currency_code" placeholder="THB" required maxlength="10">
+                  </label>
+                  <label>
+                    <span>{{ i18n.currentLocale() === 'th' ? 'ค่าธรรมเนียม Basis Points (200 = 2%)' : 'Fee (Basis Points: 200 = 2%)' }}</span>
+                    <input type="number" formControlName="fee_bps" min="0" max="5000" required>
+                  </label>
+                </div>
+                <div class="inline-actions">
+                  <button class="btn btn-primary" type="submit">{{ i18n.currentLocale() === 'th' ? 'บันทึกการกำหนดประเทศ' : 'Save Country Assignment' }}</button>
+                  <button class="btn btn-secondary" type="button" (click)="closeAssignCountryModal()">{{ i18n.currentLocale() === 'th' ? 'ยกเลิก' : 'Cancel' }}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </article>
+
         <article class="panel">
           <div class="panel-heading">
             <h2>{{ adminText('deposits') }}</h2>
@@ -1790,6 +2007,10 @@ export class AdminPageComponent implements OnInit {
   protected readonly media = signal<AdminRow[]>([]);
   protected readonly auditLog = signal<AdminRow[]>([]);
   protected readonly siteSettings = signal<AdminRow[]>([]);
+  protected readonly paymentModules = signal<PaymentModuleRegisterInfo[]>([]);
+  protected readonly paymentBootInfo = signal<SystemBootInfo | null>(null);
+  protected readonly showAssignCountryModal = signal(false);
+  protected readonly selectedPaymentModule = signal<PaymentModuleRegisterInfo | null>(null);
   protected readonly pendingFaviconFile = signal<File | null>(null);
   protected readonly selectedFaviconFileName = signal('');
   protected readonly faviconPreviewUrl = signal('');
@@ -2046,6 +2267,16 @@ export class AdminPageComponent implements OnInit {
     password: [''],
   });
 
+  protected readonly assignCountryForm = this.fb.group({
+    provider_code: ['', Validators.required],
+    country_code: ['', [Validators.required, Validators.maxLength(10)]],
+    currency_code: ['', [Validators.required, Validators.maxLength(10)]],
+    fee_bps: [200, [Validators.required, Validators.min(0)]],
+    min_amount_microcredits: [1000000],
+    max_amount_microcredits: [100000000000],
+    fixed_fee_microcredits: [0],
+  });
+
   async ngOnInit(): Promise<void> {
     if (!this.skuDrafts().length) this.skuDrafts.set([this.defaultSkuDraft()]);
     this.seo.setPage({
@@ -2055,7 +2286,7 @@ export class AdminPageComponent implements OnInit {
       noindex: true,
     });
     this.webhookRoutes.set(this.admin.webhookRoutesAreBackendOnly());
-    await this.refreshOverview();
+    await Promise.allSettled([this.refreshOverview(), this.loadPaymentModules(false)]);
   }
 
   protected async openTab(tab: AdminTabId): Promise<void> {
@@ -2065,7 +2296,15 @@ export class AdminPageComponent implements OnInit {
     }
     if (tab === 'inventory' && !this.inventory().length) await this.loadInventory();
     if (tab === 'orders' && !this.orders().length) await this.loadOrders();
-    if (tab === 'payments' && (!this.deposits().length || !this.webhookEvents().length || !this.webhookIpAllowlist().length)) await Promise.allSettled([this.loadDeposits(), this.loadWebhookEvents(false), this.loadWebhookIpAllowlist(false), this.loadDestinationAccounts(false)]);
+    if (tab === 'payments') {
+      await Promise.allSettled([
+        this.loadDeposits(),
+        this.loadWebhookEvents(false),
+        this.loadWebhookIpAllowlist(false),
+        this.loadDestinationAccounts(false),
+        this.loadPaymentModules(false),
+      ]);
+    }
     if (tab === 'settings' && !this.siteSettings().length) await this.loadSiteSettings();
     if (tab === 'subscriptions' && (!this.sharedAccountPools().length || !this.subscriptions().length)) {
       await Promise.allSettled([
@@ -2349,6 +2588,92 @@ export class AdminPageComponent implements OnInit {
 
   protected loadDestinationAccounts(report = true): Promise<void> {
     return this.loadRows(this.adminText('moneyScarpBankAccounts'), () => this.moneyScarpGateway.listBankAccounts({ limit: 100 }), this.destinationAccounts, report);
+  }
+
+  protected async loadPaymentModules(report = false): Promise<void> {
+    try {
+      const res = await this.admin.listPaymentModules();
+      if (!res) return;
+      const data = res as any;
+      const boot = data.boot_info ?? data.data?.boot_info ?? null;
+      const modules = Array.isArray(data)
+        ? data
+        : (data.modules ?? data.data?.modules ?? data.data ?? []);
+      this.paymentBootInfo.set(boot);
+      this.paymentModules.set(modules);
+      if (report) {
+        this.message.set(this.i18n.currentLocale() === 'th' ? 'อัปเดตข้อมูล Payment Module Registry และ System Boot สำเร็จ' : 'Payment module registry & boot diagnostics refreshed');
+      }
+    } catch (err) {
+      console.error('Failed to load payment modules:', err);
+    }
+  }
+
+  protected async togglePaymentModule(mod: PaymentModuleRegisterInfo, cfg: PaymentModuleDbConfig): Promise<void> {
+    try {
+      await this.admin.togglePaymentModule({
+        provider_code: cfg.provider_code,
+        country_code: cfg.country_code,
+        is_enabled: !cfg.is_enabled,
+      });
+      this.message.set(
+        this.i18n.currentLocale() === 'th'
+          ? `เปลี่ยนสถานะ ${cfg.provider_code} (${cfg.country_code}) เป็น ${!cfg.is_enabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน'} แล้ว`
+          : `Toggled ${cfg.provider_code} (${cfg.country_code}) to ${!cfg.is_enabled ? 'ACTIVE' : 'DISABLED'}`
+      );
+      await this.loadPaymentModules(false);
+    } catch (err: any) {
+      this.error.set(this.errorText(err));
+    }
+  }
+
+  protected openAssignCountryModal(preselectProvider = ''): void {
+    if (preselectProvider) {
+      this.assignCountryForm.patchValue({ provider_code: preselectProvider });
+    }
+    this.showAssignCountryModal.set(true);
+  }
+
+  protected closeAssignCountryModal(): void {
+    this.showAssignCountryModal.set(false);
+  }
+
+  protected async submitAssignCountry(): Promise<void> {
+    if (this.assignCountryForm.invalid) {
+      this.error.set(this.i18n.currentLocale() === 'th' ? 'กรุณากรอกข้อมูลการกำหนดประเทศให้ครบถ้วน' : 'Please complete all required country assignment fields');
+      return;
+    }
+    const val = this.assignCountryForm.getRawValue();
+    try {
+      await this.admin.assignPaymentModuleCountry({
+        provider_code: String(val.provider_code),
+        country_code: String(val.country_code).toUpperCase(),
+        currency_code: String(val.currency_code).toUpperCase(),
+        min_amount_microcredits: Number(val.min_amount_microcredits) || 1000000,
+        max_amount_microcredits: Number(val.max_amount_microcredits) || 100000000000,
+        fee_bps: Number(val.fee_bps) || 200,
+        fixed_fee_microcredits: Number(val.fixed_fee_microcredits) || 0,
+        is_enabled: true,
+      });
+      this.message.set(
+        this.i18n.currentLocale() === 'th'
+          ? `กำหนดโมดูล ${val.provider_code} ให้ประเทศ ${val.country_code} (${val.currency_code}) สำเร็จ`
+          : `Assigned module ${val.provider_code} to ${val.country_code} (${val.currency_code}) successfully`
+      );
+      this.showAssignCountryModal.set(false);
+      this.assignCountryForm.reset({
+        provider_code: '',
+        country_code: '',
+        currency_code: '',
+        min_amount_microcredits: 1000000,
+        max_amount_microcredits: 100000000000,
+        fee_bps: 200,
+        fixed_fee_microcredits: 0,
+      });
+      await this.loadPaymentModules(false);
+    } catch (err: any) {
+      this.error.set(this.errorText(err));
+    }
   }
 
   protected async refreshActivePaymentGateway(): Promise<void> {

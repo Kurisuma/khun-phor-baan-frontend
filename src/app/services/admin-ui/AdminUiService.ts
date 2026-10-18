@@ -1,6 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiClient } from '../../modules/http-client/ApiClient';
-import type { AdminDashboardOptions, AdminListOptions, ApiEnvelope } from '../../contracts/api-contract';
+import type {
+  AdminDashboardOptions,
+  AdminListOptions,
+  ApiEnvelope,
+  AssignPaymentModuleCountryRequest,
+  PaymentModulesApiResponse,
+  SystemBootInfo,
+} from '../../contracts/api-contract';
 
 type AdminPayload<T = unknown> = ApiEnvelope<T> | T;
 
@@ -99,6 +106,19 @@ export class AdminUiService {
   updatePaymentMethod(id: string, body: Record<string, unknown>): Promise<unknown> { return this.read(this.api.patch(`/admin/payment-methods/${encodeURIComponent(id)}`, body)); }
   togglePaymentMethod(id: string, body: { is_active: boolean }): Promise<unknown> { return this.read(this.api.post(`/admin/payment-methods/${encodeURIComponent(id)}/toggle`, body)); }
   deletePaymentMethod(id: string): Promise<void> { return this.api.delete(`/admin/payment-methods/${encodeURIComponent(id)}`); }
+
+  listPaymentModules(): Promise<PaymentModulesApiResponse | unknown> {
+    return this.read(this.api.get('/admin/payment-modules'));
+  }
+  getPaymentModulesBootInfo(): Promise<{ data: SystemBootInfo; boot_info: SystemBootInfo } | unknown> {
+    return this.read(this.api.get('/admin/payment-modules/boot-info'));
+  }
+  assignPaymentModuleCountry(body: AssignPaymentModuleCountryRequest): Promise<unknown> {
+    return this.read(this.api.post('/admin/payment-modules/assign-country', body));
+  }
+  togglePaymentModule(body: { provider_code: string; country_code: string; is_enabled: boolean }): Promise<unknown> {
+    return this.read(this.api.post('/admin/payment-modules/toggle', body));
+  }
 
   webhookRoutesAreBackendOnly(): string[] {
     return ['/api/v1/webhooks/deposit/:bank'];

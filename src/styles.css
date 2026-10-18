@@ -4214,3 +4214,442 @@ input[readonly].locked-input {
   .favicon-upload-box { grid-template-columns: 1fr; }
 }
 
+/* ==========================================================================
+   PAYMENT SPI & SYSTEM BOOT DIAGNOSTICS ADMIN PANEL
+   ========================================================================== */
+.payment-spi-system-panel {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, rgba(35, 27, 40, 0.96) 0%, rgba(22, 16, 25, 0.98) 100%);
+  border: 1px solid rgba(255, 110, 166, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.system-boot-banner {
+  margin: 1.25rem 0 1.75rem 0;
+  padding: 1.25rem;
+  background: rgba(18, 13, 21, 0.85);
+  border: 1px solid rgba(255, 110, 166, 0.2);
+  border-radius: 1rem;
+}
+
+.boot-header-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--line);
+}
+
+.boot-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.boot-status-pill.status-pill-ok {
+  background: rgba(98, 214, 181, 0.15);
+  border: 1px solid rgba(98, 214, 181, 0.4);
+  color: #62d6b5;
+}
+
+.boot-status-pill.status-pill-warn {
+  background: rgba(255, 209, 102, 0.15);
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  color: #ffd166;
+}
+
+.status-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.boot-engine-title {
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+
+.boot-kernel-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-family: monospace;
+}
+
+.boot-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.boot-metric-card {
+  padding: 1rem;
+  background: rgba(30, 22, 34, 0.75);
+  border: 1px solid rgba(255, 110, 166, 0.12);
+  border-radius: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.boot-metric-card .boot-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.boot-metric-card strong {
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+
+.boot-metric-card .highlight-number {
+  color: var(--brand-strong);
+  font-size: 1.35rem;
+}
+
+.boot-metric-card small {
+  font-size: 0.8rem;
+}
+
+.boot-metric-card code {
+  font-size: 0.85rem;
+  color: var(--brand);
+}
+
+.boot-security-pipeline {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 110, 166, 0.05);
+  border: 1px dashed rgba(255, 110, 166, 0.25);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.security-pipeline-label {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--brand);
+}
+
+.boot-security-pipeline code {
+  font-size: 0.8rem;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+/* Modules Grid */
+.payment-modules-list-container {
+  margin-top: 1.5rem;
+}
+
+.modules-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 1.15rem;
+}
+
+.modules-counter-pill {
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--brand);
+  color: #171219;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.payment-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.25rem;
+}
+
+.payment-module-card {
+  padding: 1.25rem;
+  background: rgba(25, 19, 29, 0.9);
+  border: 1px solid rgba(255, 110, 166, 0.18);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.payment-module-card:hover {
+  border-color: rgba(255, 110, 166, 0.4);
+  transform: translateY(-2px);
+}
+
+.module-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.module-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.module-title-group h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.module-provider-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 110, 166, 0.15);
+  border: 1px solid rgba(255, 110, 166, 0.35);
+  border-radius: 0.4rem;
+  color: var(--brand-strong);
+  font-size: 0.72rem;
+  font-family: monospace;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.module-version-badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.module-health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.module-health-badge.health-ok {
+  background: rgba(98, 214, 181, 0.15);
+  border: 1px solid rgba(98, 214, 181, 0.35);
+  color: #62d6b5;
+}
+
+.module-health-badge.health-warn {
+  background: rgba(255, 209, 102, 0.15);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  color: #ffd166;
+}
+
+.health-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.module-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.module-desc {
+  font-size: 0.85rem;
+  color: #d1c4d4;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.module-jurisdiction-box {
+  padding: 0.75rem;
+  background: rgba(18, 14, 21, 0.7);
+  border: 1px solid rgba(255, 110, 166, 0.1);
+  border-radius: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.jurisdiction-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.jurisdiction-item code {
+  color: var(--brand);
+  font-size: 0.75rem;
+}
+
+.jurisdiction-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.tag-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sub-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.country-pill, .currency-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: monospace;
+}
+
+.country-pill {
+  background: rgba(98, 214, 181, 0.12);
+  color: #62d6b5;
+  border: 1px solid rgba(98, 214, 181, 0.25);
+}
+
+.currency-pill {
+  background: rgba(255, 209, 102, 0.12);
+  color: #ffd166;
+  border: 1px solid rgba(255, 209, 102, 0.25);
+}
+
+.module-capabilities-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.capability-tag {
+  padding: 0.18rem 0.5rem;
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  font-size: 0.72rem;
+}
+
+.capability-tag.zero-satang {
+  background: rgba(255, 110, 166, 0.15);
+  border-color: rgba(255, 110, 166, 0.3);
+  color: var(--brand-strong);
+}
+
+.module-db-configs {
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--line);
+}
+
+.db-configs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.db-configs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.db-config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: rgba(35, 26, 39, 0.7);
+  border: 1px solid rgba(255, 110, 166, 0.08);
+  border-radius: 0.5rem;
+}
+
+.config-country-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+}
+
+.config-country-code {
+  color: var(--brand);
+}
+
+.config-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.config-status-badge {
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.config-status-badge.enabled {
+  background: rgba(98, 214, 181, 0.15);
+  color: #62d6b5;
+}
+
+.config-status-badge.disabled {
+  background: rgba(255, 122, 159, 0.15);
+  color: #ff7a9f;
+}
+
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 7, 12, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.admin-modal-card {
+  width: 100%;
+  max-width: 600px;
+  background: #1f1a22;
+  border: 1px solid rgba(255, 110, 166, 0.35);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
